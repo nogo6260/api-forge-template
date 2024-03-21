@@ -1,0 +1,24 @@
+[package]
+name = "{{project-name}}"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+
+graceful-futures = { path = "../../restify/graceful-futures" }
+restify = { path = "../../restify/restify" }
+
+thiserror = "1.0.56"
+reqwest = { version = "0.11.27", features = ["json", "rustls-tls"] }
+serde = "1.0.195"
+serde_json = "1.0.111"
+
+tokio = { version = "1.35.1", features = ["full"] }
+tokio-util = "0.7.10"
+tokio-test = "0.4"
+tokio-tungstenite = { version = "0.21.0", features = ["rustls-tls-native-roots"] }
+async-trait = { version = "0.1.77"}
+
+uuid = { version = "1.8.0", features = ["v4"] }
+tracing = { version = "0.1.40" }
+anyhow = "1.0.81"

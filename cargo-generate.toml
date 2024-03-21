@@ -1,0 +1,4 @@
+[hooks]
+pre = ["./rename.rhai"]
+[template]
+exclude = ["*.md"]

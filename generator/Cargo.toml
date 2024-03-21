@@ -1,0 +1,11 @@
+[package]
+name = "generate"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+path = "src/main.rs"
+name = "generate"
+
+[dependencies]
+restify-marco = { path = "../../restify/restify-marco" }
