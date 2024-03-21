@@ -5,9 +5,9 @@ pub type Result<T> = core::result::Result<T, Error>;
 #[derive(Debug, Error)]
 pub enum Error {
     #[error(transparent)]
-    Http(#[from] restify::http::RequestError),
+    Http(#[from] common::restful::RequestError),
     #[error(transparent)]
-    Stream(#[from] restify::stream::ConnectivityError),
+    Stream(#[from] common::websocket::ConnectivityError),
     #[error(transparent)]
     ReqError(#[from] reqwest::Error),
     #[error(transparent)]

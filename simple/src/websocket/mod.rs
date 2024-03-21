@@ -1,7 +1,6 @@
 use crate::errors::*;
 use crate::websocket::events::StreamEvent;
 use graceful_futures::Lifetime;
-use std::net::ToSocketAddrs;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;

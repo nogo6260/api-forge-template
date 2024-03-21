@@ -1,4 +1,8 @@
-[hooks]
-pre = ["./rename.rhai"]
+#[hooks]
+#pre = ["./rename.rhai"]
 [template]
-exclude = ["*.md"]
+ignore = [
+    "README.md",
+    "simple",
+    "rename.rhai",
+]

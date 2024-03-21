@@ -1,8 +1,8 @@
-use crate::{restify_config, Code};
-use restify_marco::Restify;
+use forge_marco::Forge;
+use crate::{forge_config, Code};
 
-restify_config! {
-    #[derive(Restify)]
+forge_config! {
+    #[derive(Forge)]
     #[config(path = "/api/v1/assets", method = "GET")]
     #[config(response= "models::Assets")]
     pub struct Asset;

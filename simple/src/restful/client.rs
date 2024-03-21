@@ -1,17 +1,17 @@
-use std::future::Future;
+use crate::errors::*;
+use crate::options::Options;
+use crate::restful::traits::FetchResponse;
 use async_trait::async_trait;
+use common::restful::Client as BaseClient;
 use reqwest::header::HeaderMap;
 use reqwest::{Response, StatusCode};
 use serde::Serialize;
-use crate::options::Options;
-use crate::errors::*;
-use restify::http::Client as BaseClient;
-use crate::restful::traits::FetchResponse;
+use std::future::Future;
 
 #[derive(Debug, Clone)]
 pub struct Payload<T>
-    where
-        T: Serialize + Send + Clone,
+where
+    T: Serialize + Send + Clone,
 {
     pub endpoint: Endpoint,
     pub data: Option<T>,
@@ -27,8 +27,8 @@ pub struct Endpoint {
 
 impl Endpoint {
     pub fn new<T>(method: reqwest::Method, path: T, private: bool) -> Self
-        where
-            T: AsRef<str>,
+    where
+        T: AsRef<str>,
     {
         Endpoint {
             path: path.as_ref().to_string(),
@@ -55,8 +55,8 @@ impl Client {
 #[async_trait]
 impl<'a> FetchResponse for Client {
     async fn fetch<P>(&self, payload: Payload<P>) -> Result<Response>
-        where
-            P: serde::ser::Serialize + Send + Clone,
+    where
+        P: serde::ser::Serialize + Send + Clone,
     {
         let Payload {
             endpoint,
@@ -81,9 +81,9 @@ impl<'a> FetchResponse for Client {
         response: Response,
         parser: impl FnOnce(Response) -> Fut + Send,
     ) -> Result<T>
-        where
-            T: serde::de::DeserializeOwned,
-            Fut: Future<Output=Result<T>> + Send,
+    where
+        T: serde::de::DeserializeOwned,
+        Fut: Future<Output = Result<T>> + Send,
     {
         match response.status() {
             StatusCode::OK => Ok(parser(response)

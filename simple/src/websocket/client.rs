@@ -3,10 +3,9 @@ use crate::websocket::command::StreamCommand;
 use crate::websocket::events::StreamEvent;
 use crate::websocket::{command, send_event};
 use async_trait::async_trait;
+use common::websocket;
 use graceful_futures::Lifetime;
 use reqwest::Url;
-use restify::stream;
-use restify::stream::ClientSupport;
 use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::mpsc;
@@ -15,7 +14,7 @@ use uuid::Uuid;
 pub struct Client {
     lifetime: Arc<Lifetime>,
     pub subscribe_cmd: StreamCommand,
-    internal: Arc<stream::Client>,
+    internal: Arc<websocket::Client>,
     id: Uuid,
 }
 
@@ -30,7 +29,7 @@ impl Client {
             lifetime: lifetime.clone(),
             id: id.clone(),
         });
-        let internal = stream::Client::new(id.clone(), support, lifetime.clone());
+        let internal = websocket::Client::new(id.clone(), support, lifetime.clone());
         Self {
             lifetime,
             subscribe_cmd: StreamCommand::default(),
@@ -50,44 +49,42 @@ impl Client {
             .await
     }
 
-    pub async fn open(self) -> crate::errors::Result<Client> {
+    pub async fn open(self) -> Result<Client> {
         self.internal.connect_ws().await?;
         Ok(self)
     }
 
-    pub async fn close(self) -> crate::errors::Result<Client> {
+    pub async fn close(self) -> Result<Client> {
         self.internal.disconnect_ws().await;
         Ok(self)
     }
 
-    pub async fn resend(&self) -> crate::errors::Result<()> {
+    pub async fn resend(&self) -> Result<()> {
         if self.subscribe_cmd.params.len() > 0 {
             let msg = serde_json::to_string(&self.subscribe_cmd)?;
             self.internal.send_message(msg)?;
             Ok(())
         } else {
             self.internal.disconnect_ws().await;
-            Err(crate::errors::Error::Msg(
-                "no subscriptions to resend".to_string(),
-            ))
+            Err(Error::Msg("no subscriptions to resend".to_string()))
         }
     }
 
-    pub fn send_cmd(mut self, cmd: StreamCommand) -> crate::errors::Result<Client> {
+    pub fn send_cmd(mut self, cmd: StreamCommand) -> Result<Client> {
         match cmd.method {
             command::Method::Subscribe => {
                 let mut set: HashSet<_> = self
                     .subscribe_cmd
                     .params
                     .into_iter()
-                    .chain(cmd.params.into_iter())
+                    .chain(cmd.params.clone().into_iter())
                     .collect();
 
                 self.subscribe_cmd.params = set.drain().collect();
             }
             command::Method::Unsubscribe => {
                 let mut params = self.subscribe_cmd.params.clone();
-                for item in cmd.params {
+                for item in cmd.params.clone() {
                     if let Some(index) = params.iter().position(|v| v == &item) {
                         params.remove(index);
                     }
@@ -96,7 +93,7 @@ impl Client {
             }
         }
 
-        let msg = serde_json::to_string(&self.subscribe_cmd)?;
+        let msg = serde_json::to_string(&cmd)?;
         self.internal.send_message(msg)?;
 
         Ok(self)
@@ -116,7 +113,7 @@ impl StreamSupport {
 }
 
 #[async_trait]
-impl ClientSupport for StreamSupport {
+impl websocket::ClientSupport for StreamSupport {
     fn on_connecting(&self) -> anyhow::Result<()> {
         self.send(StreamEvent::OnConnecting(self.id.to_string()))
             .map_err(Into::into)

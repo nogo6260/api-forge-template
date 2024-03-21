@@ -12,6 +12,7 @@ use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 
+// {{project-name | upper_camel_case}}
 pub struct {{project-name | upper_camel_case}} {
     client: restful::Client,
     pub lifetime: Arc<Lifetime>,
@@ -27,18 +28,18 @@ impl {{project-name | upper_camel_case}} {
     }
 
     pub fn general<'a, P, R, S>(&'a self, data: P) -> S
-    where
+        where
         //  payload
-        P: GeneralRequest<'a, Payload = P, Response = R, Sender = S>
+            P: GeneralRequest<'a, Payload=P, Response=R, Sender=S>
             + Serialize
             + Clone
             + Sync
             + Send,
         //  response
-        R: DeserializeOwned,
+            R: DeserializeOwned,
         //  request
-        S: Sender<Payload = P, Response = R>,
-        for<'b> &'b S: TryInto<Payload<P>, Error = Error>,
+            S: Sender<Payload=P, Response=R>,
+            for<'b> &'b S: TryInto<Payload<P>, Error=Error>,
     {
         P::new_request(&self.client, data)
     }

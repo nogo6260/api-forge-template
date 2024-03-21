@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! restify_config {
+macro_rules! forge_config {
     // pub Test {
     //  ...
     // }

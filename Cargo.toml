@@ -1,2 +1,23 @@
 [workspace]
-members = ["{{project-name}}", "generator"]
+
+members = ["generator"]
+
+[workspace.dependencies]
+graceful-futures = { path = "../api-forge/graceful-futures" }
+common = { path = "../api-forge/common" }
+
+serde = "1.0.195"
+serde_json = "1.0.111"
+uuid = { version = "1.8.0", features = ["v4"] }
+
+async-trait = { version = "0.1.77" }
+reqwest = { version = "0.11.27", features = ["json", "rustls-tls"] }
+
+tokio = { version = "1.35.1", features = ["full"] }
+tokio-util = "0.7.10"
+tokio-test = "0.4"
+tokio-tungstenite = { version = "0.21.0", features = ["rustls-tls-native-roots"] }
+
+thiserror = "1.0.56"
+anyhow = { version = "1.0.81" }
+tracing = { version = "0.1.40" }
