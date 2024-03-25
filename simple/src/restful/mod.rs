@@ -1,7 +1,9 @@
-pub mod api;
-pub mod models;
-pub mod traits;
+pub use api::*;
+pub use client::*;
 
 mod client;
+pub mod models;
 
-pub use client::*;
+mod api;
+
+pub type ExtraType = u64;

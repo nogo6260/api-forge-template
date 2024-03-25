@@ -1,94 +1,102 @@
-use crate::errors::*;
-use crate::options::Options;
-use crate::restful::traits::FetchResponse;
-use async_trait::async_trait;
-use common::restful::Client as BaseClient;
-use reqwest::header::HeaderMap;
-use reqwest::{Response, StatusCode};
-use serde::Serialize;
 use std::future::Future;
 
-#[derive(Debug, Clone)]
-pub struct Payload<T>
-where
-    T: Serialize + Send + Clone,
-{
-    pub endpoint: Endpoint,
-    pub data: Option<T>,
-    pub extra: Option<u64>,
-}
+use async_trait::async_trait;
+use chrono::Utc;
+use common::restful::{Client as RestClient, Endpoint, RestResponse};
+use common::restful::{FeedData, RequestError};
+use common::restful::traits::*;
+use hyper::body::Bytes;
+use hyper::header::{CONTENT_TYPE, USER_AGENT};
+use hyper::StatusCode;
+use serde::Serialize;
 
-#[derive(Clone, Debug)]
-pub struct Endpoint {
-    pub path: String,
-    pub method: reqwest::Method,
-    pub private: bool,
-}
+use crate::errors::Error;
+use crate::options::Options;
+use crate::restful::ExtraType;
 
-impl Endpoint {
-    pub fn new<T>(method: reqwest::Method, path: T, private: bool) -> Self
-    where
-        T: AsRef<str>,
-    {
-        Endpoint {
-            path: path.as_ref().to_string(),
-            method,
-            private,
-        }
-    }
-}
+type Result<T> = core::result::Result<T, Error>;
+
 
 pub struct Client {
     pub options: Options,
-    client: BaseClient,
+    client: RestClient,
 }
 
 impl Client {
     pub fn new(options: Options) -> Self {
-        // default headers
-        let header = HeaderMap::new();
-        let client = BaseClient::new(header, options.timeout.clone());
+        let client = RestClient::new();
         Self { options, client }
+    }
+
+    fn get_timestamp() -> u64 {
+        Utc::now().timestamp_millis() as u64
+    }
+
+    fn create_signature_data(query: String, window: Option<ExtraType>) -> String {
+        todo!()
+    }
+
+    fn create_signature(api_secret: String, data: String, instruction: &'static str) -> String {
+        todo!()
     }
 }
 
 #[async_trait]
 impl<'a> FetchResponse for Client {
-    async fn fetch<P>(&self, payload: Payload<P>) -> Result<Response>
+    type Error = Error;
+    type Extra = ExtraType;
+
+    async fn fetch<PayloadType>(
+        &self,
+        feed_data: FeedData<PayloadType, Self::Extra>,
+    ) -> Result<RestResponse>
     where
-        P: serde::ser::Serialize + Send + Clone,
+        PayloadType: Serialize + Send + Clone,
     {
-        let Payload {
-            endpoint,
+        let FeedData {
+            endpoint:
+                Endpoint {
+                    method,
+                    path,
+                    private,
+                },
             data,
             extra,
-        } = payload.into();
+            action_name,
+        } = feed_data;
 
-        let method = endpoint.method.clone();
-        // complete the request url
-        let url = String::default();
-        // complete the request headers
-        let headers: HeaderMap = HeaderMap::default();
-        // select one of the query/form/json request data types
-        let resp = self.client.send(method, url, Some(headers)).await?;
-        //let resp = self.client.send_form(method,url,data,Some(headers)).await?;
-        //let resp = self.client.send_json(method,url,data,Some(headers)).await?;
-        Ok(resp)
+        let path_and_query = String::default();
+        let body: Option<Bytes> = None;
+
+        let uri = RestClient::create_uri(&self.options.host, path_and_query);
+        let res = self
+            .client
+            .request(action_name, method, uri, body, |builder| {
+                builder
+                    .header(USER_AGENT, "tradix-rust")
+                    .header(CONTENT_TYPE, "application/json; charset=utf-8")
+            })
+            .await?;
+
+        Ok(res)
     }
 
     async fn response_handler<T, Fut>(
         &self,
-        response: Response,
-        parser: impl FnOnce(Response) -> Fut + Send,
+        response: RestResponse,
+        parser: impl FnOnce(String) -> Fut + Send,
     ) -> Result<T>
     where
         T: serde::de::DeserializeOwned,
-        Fut: Future<Output = Result<T>> + Send,
+        Fut: Future<Output = std::result::Result<T, RequestError>> + Send,
     {
-        match response.status() {
-            StatusCode::OK => Ok(parser(response)
+        let status = response.status;
+
+        match status {
+            StatusCode::OK => Ok(parser(response.content)
                 .await
                 .map_err(|e| Error::ParseResponse(e.to_string()))?),
+            // add additional status codes
             s => Err(Error::Msg(format!("Received response: {s:?}"))),
         }
     }

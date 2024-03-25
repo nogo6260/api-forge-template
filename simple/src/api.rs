@@ -1,11 +1,12 @@
 use crate::errors::Error;
 use crate::errors::*;
 use crate::options::Options;
-use crate::restful::traits::*;
-use crate::restful::Payload;
+use crate::restful::ExtraType;
 use crate::websocket::command::StreamCommand;
 use crate::websocket::events::StreamEvent;
 use crate::{restful, websocket};
+use common::restful::traits::{GeneralRequest, Sender};
+use common::restful::FeedData;
 use graceful_futures::Lifetime;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
@@ -27,21 +28,32 @@ impl {{project-name | upper_camel_case}} {
         }
     }
 
-    pub fn general<'a, P, R, S>(&'a self, data: P) -> S
+    pub fn general<'a, PayloadType, Response, MySender>(&'a self, data: PayloadType) -> MySender
         where
         //  payload
-            P: GeneralRequest<'a, Payload=P, Response=R, Sender=S>
-            + Serialize
-            + Clone
-            + Sync
-            + Send,
+        PayloadType: GeneralRequest<
+            'a,
+            PayloadType,
+            Response,
+            Error = Error,
+            Extra = ExtraType,
+            Client = restful::Client,
+            Sender = MySender,
+        >,
+        PayloadType: Serialize + Clone + Sync + Send,
         //  response
-            R: DeserializeOwned,
+        Response: DeserializeOwned,
         //  request
-            S: Sender<Payload=P, Response=R>,
-            for<'b> &'b S: TryInto<Payload<P>, Error=Error>,
+        MySender: Sender<
+            PayloadType,
+            Response,
+            Error = Error,
+            Extra = ExtraType,
+            Client = restful::Client,
+        >,
+        for<'b> &'b MySender: TryInto<FeedData<PayloadType, ExtraType>, Error = Error>,
     {
-        P::new_request(&self.client, data)
+        PayloadType::new_request(&self.client, data)
     }
 
     pub async fn new_stream(

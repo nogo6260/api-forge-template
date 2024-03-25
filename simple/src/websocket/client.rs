@@ -5,11 +5,11 @@ use crate::websocket::{command, send_event};
 use async_trait::async_trait;
 use common::websocket;
 use graceful_futures::Lifetime;
-use reqwest::Url;
 use std::collections::HashSet;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use uuid::Uuid;
+use hyper::Uri;
 
 pub struct Client {
     lifetime: Arc<Lifetime>,
@@ -133,7 +133,7 @@ impl websocket::ClientSupport for StreamSupport {
         serde_json::from_str(msg).map_err(Into::into)
     }
 
-    async fn create_url(&self) -> anyhow::Result<Url> {
-        Ok(Url::parse("wss://ws.simple.com")?)
+    async fn create_url(&self) -> anyhow::Result<Uri> {
+        Ok(Uri::from_static("wss://ws.simple.com"))
     }
 }

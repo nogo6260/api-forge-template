@@ -9,11 +9,9 @@ pub enum Error {
     #[error(transparent)]
     Stream(#[from] common::websocket::ConnectivityError),
     #[error(transparent)]
-    ReqError(#[from] reqwest::Error),
-    #[error(transparent)]
     Json(#[from] serde_json::Error),
     #[error(transparent)]
-    InvalidHeaderError(#[from] reqwest::header::InvalidHeaderValue),
+    InvalidHeaderError(#[from] hyper::header::InvalidHeaderValue),
 
     #[error("failed to send {0}: {1}")]
     SendError(String, String),
