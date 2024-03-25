@@ -107,7 +107,7 @@ pub struct StreamSupport {
 }
 
 impl StreamSupport {
-    fn send(&self, event: StreamEvent) -> Result<()> {
+    fn send(&self, event: StreamEvent) -> anyhow::Result<()> {
         send_event(&self.events_channel, self.lifetime.clone(), self.id, event)
     }
 }
@@ -133,7 +133,7 @@ impl websocket::ClientSupport for StreamSupport {
         serde_json::from_str(msg).map_err(Into::into)
     }
 
-    async fn create_url(&self) -> anyhow::Result<Uri> {
-        Ok(Uri::from_static("wss://ws.simple.com"))
+    async fn create_url(&self) -> anyhow::Result<Url> {
+        Url::parse("wss://ws.simple.exchange").with_context(|| "Unable parse websocket uri")
     }
 }
