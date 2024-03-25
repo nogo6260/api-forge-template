@@ -7,9 +7,10 @@ use common::websocket;
 use graceful_futures::Lifetime;
 use std::collections::HashSet;
 use std::sync::Arc;
+use anyhow::Context;
 use tokio::sync::mpsc;
 use uuid::Uuid;
-use hyper::Uri;
+use url::Url;
 
 pub struct Client {
     lifetime: Arc<Lifetime>,

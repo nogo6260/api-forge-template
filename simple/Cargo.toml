@@ -19,6 +19,7 @@ thiserror.workspace = true
 tracing.workspace = true
 anyhow.workspace = true
 chrono.workspace = true
+url.workspace = true
 
 hyper = { version = "0.14.28", features = ["http1", "http2", "runtime", "client", "tcp"] }
 hyper-rustls = { version = "0.23.2", features = ["http2"] }
